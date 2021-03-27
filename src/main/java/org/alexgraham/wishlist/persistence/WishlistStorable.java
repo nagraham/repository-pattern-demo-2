@@ -5,6 +5,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @DynamoDbBean
 public class WishlistStorable {
@@ -31,6 +32,14 @@ public class WishlistStorable {
                 wishlist.ownerId().toString(),
                 wishlist.name(),
                 wishlist.createdAt());
+    }
+
+    public Wishlist toWishlist() {
+        return Wishlist.rehydrate(
+                UUID.fromString(id),
+                UUID.fromString(ownerId),
+                name,
+                createdAt);
     }
 
     @DynamoDbPartitionKey

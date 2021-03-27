@@ -2,6 +2,7 @@ package org.alexgraham.wishlist.persistence;
 
 import org.alexgraham.wishlist.domain.AlreadyExistsException;
 import org.alexgraham.wishlist.domain.Repository;
+import org.alexgraham.wishlist.domain.ResourceNotFoundException;
 import org.alexgraham.wishlist.domain.Wishlist;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,9 +10,12 @@ import software.amazon.awssdk.core.exception.SdkServiceException;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
+import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
+
+import java.util.UUID;
 
 public class DynamoRepository implements Repository {
     private static final Logger logger = LoggerFactory.getLogger(DynamoRepository.class);
@@ -20,6 +24,19 @@ public class DynamoRepository implements Repository {
 
     public DynamoRepository(DynamoDbEnhancedClient dynamoDbEnhanced, String tableName) {
         this.wishlistStorableTable = dynamoDbEnhanced.table(tableName, TableSchema.fromBean(WishlistStorable.class));
+    }
+
+    @Override
+    public Wishlist getById(UUID wishlistId) {
+        WishlistStorable storable = wishlistStorableTable.getItem(Key.builder()
+                .partitionValue(wishlistId.toString())
+                .build());
+
+        if (storable == null) {
+            throw new ResourceNotFoundException("not found");
+        }
+
+        return storable.toWishlist();
     }
 
     @Override

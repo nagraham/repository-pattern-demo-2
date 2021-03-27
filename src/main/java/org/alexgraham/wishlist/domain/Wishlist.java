@@ -1,6 +1,7 @@
 package org.alexgraham.wishlist.domain;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -46,6 +47,27 @@ public class Wishlist {
     public static Wishlist create(UUID ownerId, String name) {
         UUID id = createId(ownerId, name);
         return new Wishlist(id, ownerId, name, Instant.now());
+    }
+
+    /**
+     * Rehydrates a Wishlist object based on an existing set of Wishlist data.
+     *
+     * This is intended to be used to re-create a Wishlist object from JSON
+     * or from an object stored in a Repository.
+     *
+     * @param wishlistId The Wishlist id
+     * @param ownerId The owner id
+     * @param name The name of the Wishlist
+     * @param createdAt The time the Wishlist was created at
+     * @return the rehydrated wishlist object
+     */
+    public static Wishlist rehydrate(
+            UUID wishlistId,
+            UUID ownerId,
+            String name,
+            Instant createdAt
+    ) {
+        return new Wishlist(wishlistId, ownerId, name, createdAt);
     }
 
     /**

@@ -21,6 +21,8 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import java.net.URI;
 import java.time.Instant;
+import java.util.List;
+import java.util.MissingResourceException;
 import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -111,9 +113,43 @@ class WishlistServiceTest {
         }
 
         @Test
-        void invalidArgument() {
+        void whenArgumentsAreNotValid_throwIllegalArgumentException() {
             assertThrows(IllegalArgumentException.class, () -> wishlistService
                     .createWishlist(ownerId, null));
         }
+    }
+
+    @Nested
+    @DisplayName("GetWishlistBtId")
+    class GetWishlistById {
+
+        @Test
+        void whenTheWishlistExists_returnsWishlist() {
+            UUID wishlistId = UUID.randomUUID();
+            UUID owner = UUID.randomUUID();
+            addWishlistInDynamo(wishlistId, owner, "test-name");
+
+            Wishlist wishlist = wishlistService.getWishlistById(wishlistId);
+
+            assertThat(wishlist.id(), is(wishlistId));
+            assertThat(wishlist.ownerId(), is(owner));
+            assertThat(wishlist.name(), is("test-name"));
+        }
+
+        @Test
+        void whenTheWishlistDoesNotExist_throwResourceNotFoundException() {
+            UUID wishlistId = UUID.randomUUID();
+
+            assertThrows(ResourceNotFoundException.class, () -> wishlistService.getWishlistById(wishlistId));
+        }
+    }
+
+    private void addWishlistInDynamo(UUID wishlistId, UUID owner, String name) {
+        WishlistStorable wishlistStorable = new WishlistStorable(
+                wishlistId.toString(),
+                owner.toString(),
+                name,
+                Instant.now());
+        wishlistStorableDynamoDbTable.putItem(wishlistStorable);
     }
 }

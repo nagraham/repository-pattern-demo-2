@@ -3,6 +3,7 @@ package org.alexgraham.wishlist.domain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.MissingResourceException;
 import java.util.UUID;
 
 public class WishlistService {
@@ -41,5 +42,24 @@ public class WishlistService {
         }
 
         return wishlist;
+    }
+
+    /**
+     * Gets a Wishlist with the given identifier.
+     *
+     * @param wishlistId The wishlist identifier
+     * @return The Wishlist
+     * @throws MissingResourceException if the wishlist does not exist
+     */
+    public Wishlist getWishlistById(UUID wishlistId) {
+        // TODO: Authorize access
+        try {
+            return repository.getById(wishlistId);
+        } catch (ResourceNotFoundException e) {
+            throw new ResourceNotFoundException("wishlist with id=" + wishlistId.toString());
+        } catch (Exception e) {
+            logger.error("Something bad happened: ", e);
+            throw new RuntimeException("Internal Service Error");
+        }
     }
 }
