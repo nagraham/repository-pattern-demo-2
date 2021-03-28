@@ -1,6 +1,7 @@
 package org.alexgraham.wishlist.domain;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -13,12 +14,14 @@ public class Wishlist {
     private final UUID ownerId;
     private final String name;
     private final Instant createdAt;
+    private final List<Item> items;
 
-    private Wishlist(UUID id, UUID ownerId, String name, Instant createdAt) {
+    private Wishlist(UUID id, UUID ownerId, String name, Instant createdAt, List<Item> items) {
         this.id = id;
         this.ownerId = ownerId;
         this.name = name;
         this.createdAt = createdAt;
+        this.items = items;
     }
 
     public Instant createdAt() {
@@ -37,8 +40,12 @@ public class Wishlist {
         return name;
     }
 
+    public List<Item> items() {
+        return List.copyOf(this.items);
+    }
+
     /**
-     * Creates a new Wishlist.
+     * Creates a new Wishlist with an empty list of items.
      *
      * @param ownerId The id of the owner of this wishlist
      * @param name The name of the wishlist
@@ -46,7 +53,7 @@ public class Wishlist {
      */
     public static Wishlist create(UUID ownerId, String name) {
         UUID id = createId(ownerId, name);
-        return new Wishlist(id, ownerId, name, Instant.now());
+        return new Wishlist(id, ownerId, name, Instant.now(), new ArrayList<>());
     }
 
     /**
@@ -65,9 +72,10 @@ public class Wishlist {
             UUID wishlistId,
             UUID ownerId,
             String name,
-            Instant createdAt
+            Instant createdAt,
+            List<Item> items
     ) {
-        return new Wishlist(wishlistId, ownerId, name, createdAt);
+        return new Wishlist(wishlistId, ownerId, name, createdAt, items);
     }
 
     /**

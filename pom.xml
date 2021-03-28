@@ -44,11 +44,6 @@
             <artifactId>dynamodb</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>software.amazon.awssdk</groupId>
-            <artifactId>dynamodb-enhanced</artifactId>
-        </dependency>
-
         <!-- Logging -->
 
         <dependency>

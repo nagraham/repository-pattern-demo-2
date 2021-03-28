@@ -9,9 +9,19 @@ public interface Repository {
      *
      * @param wishlistId the ID of the wishlist to get
      * @return A wishlist
-     * @throws java.util.ResourceNotFoundException if the Wishlist is not found
+     * @throws ResourceNotFoundException if the Wishlist is not found
      */
     Wishlist getById(UUID wishlistId);
+
+    /**
+     * Saves a new Item in the persisted Wishlist object.
+     *
+     * @param wishlistId the ID of the wishlist the Item will be saved to.
+     * @param item the Item to save; overwrites the Item if one with the
+     *            same ID already exists
+     * @throws ResourceNotFoundException if the Wishlist is not found
+     */
+    void saveNewItem(UUID wishlistId, Item item);
 
     /**
      * Saves a new Wishlist in persistence.
@@ -21,5 +31,4 @@ public interface Repository {
      * id already exists.
      */
     void saveNew(Wishlist wishlist);
-
 }

@@ -16,6 +16,33 @@ public class WishlistService {
     }
 
     /**
+     * Adds a new Item to a Wishlist.
+     *
+     * @param wishlistId Id of the wishlist to which the item will be added
+     * @param itemDescription description of the new item
+     * @return The newly added Item
+     * @throws IllegalArgumentException if the Item arguments are invalid
+     * @throws MissingResourceException if the wishlist does not exist
+     */
+    public Item addItemToWishlist(UUID wishlistId, String itemDescription) {
+        Item item = Item.create(itemDescription);
+
+        if (item.validate().isPresent()) {
+            throw new IllegalArgumentException("The item arguments are invalid: " + item.validate().get());
+        }
+
+        try {
+            repository.saveNewItem(wishlistId, item);
+            return item;
+        } catch (ResourceNotFoundException e) {
+            throw new ResourceNotFoundException("wishlist with id=" + wishlistId.toString());
+        } catch (Exception e) {
+            logger.error("Something bad happened: ", e);
+            throw new RuntimeException("Internal Service Error");
+        }
+    }
+
+    /**
      * Creates a new Wishlist
      *
      * @param ownerId ID for the user who owns the Wishlist
