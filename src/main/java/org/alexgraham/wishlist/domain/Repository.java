@@ -31,4 +31,14 @@ public interface Repository {
      * id already exists.
      */
     void saveNew(Wishlist wishlist);
+
+    /**
+     * Updates an Item within a specified Wishlist.
+     *
+     * @param command A command object that contains parameters for the
+     *                update.
+     * @throws ResourceNotFoundException if the Wishlist is not found,
+     * of if the Item is not found in the Wishlist.
+     */
+    void updateItem(UpdateItemCommand command);
 }

@@ -28,6 +28,20 @@ import java.util.stream.Collectors;
 public class Convert {
 
     /**
+     * Convert a list of Strings to a Dynamo list of Dynamo Strings.
+     *
+     * @param stringList list of strings
+     * @return an Attribute value of type "l" with a bunch of AttributeValues
+     *          of type "s"
+     */
+    static AttributeValue toDynamo(List<String> stringList) {
+        List<AttributeValue> dynamoStringList = stringList.stream()
+                .map(str -> AttributeValue.builder().s(str).build())
+                .collect(Collectors.toList());
+        return AttributeValue.builder().l(dynamoStringList).build();
+    }
+
+    /**
      * Convert an wishlist.domain.Item to a Dynamo map structure.
      *
      * @param item the Item to convert
@@ -95,17 +109,25 @@ public class Convert {
     }
 
     /**
+     * Converts a list of Dynamo AttributeValues into a list of Strings.
+     *
+     * @param dynamoList list of AttributeValues
+     * @return list of Strings
+     */
+    static List<String> toStringList(List<AttributeValue> dynamoList) {
+        return dynamoList.stream()
+                .map(AttributeValue::s)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Converts a Dynamo Map structure/record to a wishlist.domain.Wishlist
      *
      * @param dynamoMap the map to convert
      * @return a rehydrated wishlist.domain.Wishlist
      */
     static Wishlist toWishlist(Map<String, AttributeValue> dynamoMap) {
-        List<String> idsInOrder = dynamoMap.get("itemOrderById")
-                .l()
-                .stream()
-                .map(AttributeValue::s)
-                .collect(Collectors.toList());
+        List<String> idsInOrder = toStringList(dynamoMap.get("itemOrderById").l());
 
         List<Item> orderedItemList = idsInOrder.stream()
                 .map(id -> dynamoMap.get("itemMap").m().get(id))

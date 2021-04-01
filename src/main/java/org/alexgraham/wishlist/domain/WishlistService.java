@@ -89,4 +89,34 @@ public class WishlistService {
             throw new RuntimeException("Internal Service Error");
         }
     }
+
+    /**
+     * Handles the use case of re-ordering a single Item within a Wishlist.
+     *
+     * @param wishlistId the Wishlist the item is in
+     * @param itemId the Item to re-order
+     * @param newIndex the new index of the item (starting from zero)
+     */
+    public void reorderWishlistItem(UUID wishlistId, UUID itemId, int newIndex) {
+        UpdateItemCommand command = UpdateItemCommand.builder()
+                .wishlistId(wishlistId)
+                .itemId(itemId)
+                .newIndex(newIndex)
+                .build();
+
+        if (command.validate().isPresent()) {
+            throw new IllegalArgumentException("The update arguments are invalid: "
+                    + command.validate().get());
+        }
+
+        try {
+            repository.updateItem(command);
+        } catch (ResourceNotFoundException e) {
+            throw new ResourceNotFoundException("item with id=" + itemId.toString() +
+                    "not found in wishlist with id=" + wishlistId.toString());
+        } catch (Exception e) {
+            logger.error("Something bad happened: ", e);
+            throw new RuntimeException("Internal Service Error");
+        }
+    }
 }

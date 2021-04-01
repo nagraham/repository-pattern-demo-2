@@ -203,4 +203,178 @@ class WishlistServiceTest {
             assertThrows(ResourceNotFoundException.class, () -> wishlistService.getWishlistById(UUID.randomUUID()));
         }
     }
+
+    @Nested
+    @DisplayName("reorderWishlistItem")
+    class ReorderWishlistItem {
+
+        private Wishlist wishlist;
+
+        private void assertWishlistItemsInOrder(Item... items) {
+            Wishlist retrievedWishlist = wishlistService.getWishlistById(wishlist.id());
+            assertThat(retrievedWishlist.items(), hasSize(items.length));
+            assertThat(retrievedWishlist.items(), contains(items));
+        }
+
+        @BeforeEach
+        public void createWishlist() {
+            wishlist = wishlistService.createWishlist(UUID.randomUUID(), "let's reorder some items!");
+        }
+
+        @Nested
+        @DisplayName("WishlistWithOneItem")
+        class WishlistWithOneItem {
+
+            private Item item;
+
+            @BeforeEach
+            void setupWishlistItem() {
+                item = wishlistService.addItemToWishlist(wishlist.id(), "a-single-item");
+            }
+
+            @Test
+            void whenIndexArgZero_itemIsPresent() {
+                wishlistService.reorderWishlistItem(wishlist.id(), item.id(), 0);
+
+                assertWishlistItemsInOrder(item);
+            }
+
+            @Test
+            void whenIndexArgGreaterThanZero_itemIsPresent() {
+                wishlistService.reorderWishlistItem(wishlist.id(), item.id(), 42);
+
+                assertWishlistItemsInOrder(item);
+            }
+        }
+
+        @Nested
+        @DisplayName("WishlistWithMultipleItems")
+        class WishlistWithMultipleItems {
+
+            private Item itemA;
+            private Item itemB;
+            private Item itemC;
+            private Item itemD;
+
+            @BeforeEach
+            void setupItems() {
+                itemA = wishlistService.addItemToWishlist(wishlist.id(), "item-A");
+                itemB = wishlistService.addItemToWishlist(wishlist.id(), "item-B");
+                itemC = wishlistService.addItemToWishlist(wishlist.id(), "item-C");
+                itemD = wishlistService.addItemToWishlist(wishlist.id(), "item-D");
+            }
+
+            @Test
+            void reorderFirstItem_toTheBack_itemsAreInNewOrder() {
+                wishlistService.reorderWishlistItem(wishlist.id(), itemA.id(), 3);
+
+                assertWishlistItemsInOrder(itemB, itemC, itemD, itemA);
+            }
+
+            @Test
+            void reorderFirstItem_toTheMiddle_itemsAreInNewOrder() {
+                wishlistService.reorderWishlistItem(wishlist.id(), itemA.id(), 1);
+
+                assertWishlistItemsInOrder(itemB, itemA, itemC, itemD);
+            }
+
+            @Test
+            void reorderFirstItem_backToFirst_itemsAreTheSameOrder() {
+                wishlistService.reorderWishlistItem(wishlist.id(), itemA.id(), 0);
+
+                assertWishlistItemsInOrder(itemA, itemB, itemC, itemD);
+            }
+
+            @Test
+            void reorderMiddleItem_toTheFront_itemsAreInNewOrder() {
+                wishlistService.reorderWishlistItem(wishlist.id(), itemB.id(), 0);
+
+                assertWishlistItemsInOrder(itemB, itemA, itemC, itemD);
+            }
+
+            @Test
+            void reorderMiddleItem_swapWithOtherMiddle_itemsAreInNewOrder() {
+                wishlistService.reorderWishlistItem(wishlist.id(), itemB.id(), 2);
+
+                assertWishlistItemsInOrder(itemA, itemC, itemB, itemD);
+            }
+
+            @Test
+            void reorderMiddleItem_toTheBack_itemsAreInNewOrder() {
+                wishlistService.reorderWishlistItem(wishlist.id(), itemB.id(), 3);
+
+                assertWishlistItemsInOrder(itemA, itemC, itemD, itemB);
+            }
+
+            @Test
+            void reorderMiddleItem_toOriginalSpot_itemsAreInTheSameOrder() {
+                wishlistService.reorderWishlistItem(wishlist.id(), itemB.id(), 1);
+
+                assertWishlistItemsInOrder(itemA, itemB, itemC, itemD);
+            }
+
+            @Test
+            void reorderLastItem_toTheFront_itemsAreInNewOrder() {
+                wishlistService.reorderWishlistItem(wishlist.id(), itemD.id(), 0);
+
+                assertWishlistItemsInOrder(itemD, itemA, itemB, itemC);
+            }
+
+            @Test
+            void reorderLastItem_toTheMiddle_itemsAreInNewOrder() {
+                wishlistService.reorderWishlistItem(wishlist.id(), itemD.id(), 2);
+
+                assertWishlistItemsInOrder(itemA, itemB, itemD, itemC);
+            }
+
+            @Test
+            void reorderLastItem_backToTheEnd_itemsAreInTheSameOrder() {
+                wishlistService.reorderWishlistItem(wishlist.id(), itemD.id(), 3);
+
+                assertWishlistItemsInOrder(itemA, itemB, itemC, itemD);
+            }
+
+            @Test
+            void lotsOfReordering_addNewItems_allItemsAreInExpectedOrder() {
+                wishlistService.reorderWishlistItem(wishlist.id(), itemA.id(), 2); // [B, C, A, D]
+                wishlistService.reorderWishlistItem(wishlist.id(), itemD.id(), 0); // [D, B, C, A]
+                Item itemE = wishlistService.addItemToWishlist(wishlist.id(), "item-E"); // [D, B, C, A, E]
+                wishlistService.reorderWishlistItem(wishlist.id(), itemE.id(), 1); // [D, E, B, C, A]
+                wishlistService.reorderWishlistItem(wishlist.id(), itemD.id(), 2); // [E, B, D, C, A]
+
+                assertWishlistItemsInOrder(itemE, itemB, itemD, itemC, itemA);
+            }
+        }
+
+        @Nested
+        @DisplayName("Errors")
+        class Errors {
+
+            @Test
+            void whenTheWishlistDoesNotExist_throwsResourceNotFoundException() {
+                assertThrows(ResourceNotFoundException.class, () ->
+                        wishlistService.reorderWishlistItem(UUID.randomUUID(), UUID.randomUUID(), 1));
+            }
+
+            @Test
+            void whenTheWishlistHasNoItems_throwsResourceNotFoundException() {
+                assertThrows(ResourceNotFoundException.class, () ->
+                        wishlistService.reorderWishlistItem(wishlist.id(), UUID.randomUUID(), 1));
+            }
+
+            @Test
+            void whenTheWishlistHasItems_uuidDoesNotMatch_throwsResourceNotFoundException() {
+                wishlistService.addItemToWishlist(wishlist.id(), "a-single-item");
+                assertThrows(ResourceNotFoundException.class, () ->
+                        wishlistService.reorderWishlistItem(wishlist.id(), UUID.randomUUID(), 1));
+            }
+
+            @Test
+            void whenIndexNegative_throwsIllegalArgumentException() {
+                Item item = wishlistService.addItemToWishlist(wishlist.id(), "a-single-item");
+                assertThrows(IllegalArgumentException.class, () ->
+                        wishlistService.reorderWishlistItem(wishlist.id(), item.id(), -1));
+            }
+        }
+    }
 }
